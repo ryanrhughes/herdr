@@ -186,7 +186,7 @@ herdr integration install opencode
 
 Herdr writes the plugin to `~/.config/opencode/plugins/herdr-agent-state.js`. The OpenCode config directory must already exist. Uninstall removes only that plugin file.
 
-The plugin reports lifecycle state and session identity while OpenCode runs inside a Herdr pane. After OpenCode emits a session-bearing event, Herdr can use the reported session id to resume the pane with `opencode --session <id>`. Native screen manifest detection remains available when the plugin is not installed.
+The plugin reports lifecycle state and session identity while OpenCode v1 runs inside a Herdr pane. OpenCode v2 uses a shared background service, so its server-side plugin events cannot be safely associated with one Herdr pane when several windows are open. Herdr instead recognizes the `opencode2` process and uses pane-local screen detection for v2 lifecycle state; no integration install is required. After OpenCode v1 emits a session-bearing event, Herdr can use the reported session id to resume the pane with `opencode --session <id>`.
 
 ## Kilo Code CLI
 
