@@ -653,6 +653,12 @@
           "description": "Show agent labels in split pane borders when no manual pane label is set."
         },
         {
+          "key": "ui.show_hostname",
+          "type": "boolean",
+          "default": "false",
+          "description": "Show the server hostname at the right edge of the tab bar."
+        },
+        {
           "key": "ui.hide_tab_bar_when_single_tab",
           "type": "boolean",
           "default": "false",
