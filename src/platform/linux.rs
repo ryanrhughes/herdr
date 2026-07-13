@@ -21,6 +21,12 @@ struct ProcGroupMember {
 
 pub fn raise_server_nofile_limit() {}
 
+pub(crate) fn hostname_platform() -> Option<String> {
+    std::fs::read_to_string("/proc/sys/kernel/hostname")
+        .ok()
+        .or_else(|| std::env::var("HOSTNAME").ok())
+}
+
 pub(crate) fn should_draw_host_cursor_by_default() -> bool {
     running_inside_wsl()
 }
