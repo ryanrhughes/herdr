@@ -1557,6 +1557,7 @@ impl AppState {
 
     pub(crate) fn refresh_tab_bar_view(&mut self) {
         let area = self.view.tab_bar_rect;
+        let tabs_area = crate::ui::tab_bar_tabs_area(self, area);
         let Some(ws) = self.active.and_then(|idx| self.workspaces.get(idx)) else {
             self.tab_scroll = 0;
             self.view.tab_hit_areas.clear();
@@ -1568,7 +1569,7 @@ impl AppState {
 
         let layout = crate::ui::compute_tab_bar_view(
             ws,
-            area,
+            tabs_area,
             self.tab_scroll,
             self.tab_scroll_follow_active,
             self.mouse_capture,

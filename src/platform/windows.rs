@@ -40,6 +40,10 @@ use super::{ClipboardImage, ForegroundJob, Signal};
 
 const STILL_ACTIVE: u32 = 259;
 
+pub(crate) fn hostname_platform() -> Option<String> {
+    std::env::var("COMPUTERNAME").ok()
+}
+
 pub(crate) fn should_draw_host_cursor_by_default() -> bool {
     true
 }

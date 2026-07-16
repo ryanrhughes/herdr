@@ -33,6 +33,15 @@ pub(crate) fn pane_custom_command_pty_builder(command: &str) -> portable_pty::Co
     pane_custom_command_pty_builder_platform(command)
 }
 
+pub(crate) fn hostname() -> Option<String> {
+    hostname_platform().and_then(|value| normalize_hostname(&value))
+}
+
+fn normalize_hostname(value: &str) -> Option<String> {
+    let value = value.split('\0').next().unwrap_or_default().trim();
+    (!value.is_empty()).then(|| value.to_string())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct PlatformCapabilities {
     pub(crate) live_handoff: bool,
@@ -227,6 +236,12 @@ mod tests {
             pane_custom_command_pty_builder("echo hello").get_argv(),
             &expected
         );
+    }
+
+    #[test]
+    fn hostname_normalization_trims_platform_padding() {
+        assert_eq!(normalize_hostname(" foundry\0\0 "), Some("foundry".into()));
+        assert_eq!(normalize_hostname("\0\0"), None);
     }
 
     #[test]

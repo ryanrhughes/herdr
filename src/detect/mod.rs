@@ -136,7 +136,7 @@ fn lookup_agent(name: &str) -> Option<Agent> {
         "cline" => Some(Agent::Cline),
         "omp" => Some(Agent::Omp),
         "mastracode" | "mastra-code" | "mastra code" => Some(Agent::Mastracode),
-        "opencode" | "open-code" => Some(Agent::OpenCode),
+        "opencode" | "opencode2" | "open-code" => Some(Agent::OpenCode),
         "copilot" | "github-copilot" | "ghcs" => Some(Agent::GithubCopilot),
         "kimi" | "kimi-code" | "kimi code" => Some(Agent::Kimi),
         "kiro" | "kiro-cli" => Some(Agent::Kiro),
@@ -618,6 +618,7 @@ mod tests {
         assert_eq!(identify_agent("mastracode"), Some(Agent::Mastracode));
         assert_eq!(identify_agent("mastra-code"), Some(Agent::Mastracode));
         assert_eq!(identify_agent("opencode"), Some(Agent::OpenCode));
+        assert_eq!(identify_agent("opencode2"), Some(Agent::OpenCode));
         assert_eq!(identify_agent("opencode.exe"), Some(Agent::OpenCode));
         assert_eq!(identify_agent("kimi"), Some(Agent::Kimi));
         assert_eq!(identify_agent("Kimi Code"), Some(Agent::Kimi));

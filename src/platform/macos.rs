@@ -16,6 +16,18 @@ const PROC_PGRP_ONLY: u32 = 2;
 const SERVER_NOFILE_LIMIT_TARGET: libc::rlim_t = 8192;
 const CF_STRING_ENCODING_UTF8: u32 = 0x0800_0100;
 
+pub(crate) fn hostname_platform() -> Option<String> {
+    let mut bytes = [0_u8; 256];
+    if unsafe { libc::gethostname(bytes.as_mut_ptr().cast(), bytes.len()) } != 0 {
+        return std::env::var("HOSTNAME").ok();
+    }
+    let len = bytes
+        .iter()
+        .position(|byte| *byte == 0)
+        .unwrap_or(bytes.len());
+    String::from_utf8(bytes[..len].to_vec()).ok()
+}
+
 pub(crate) fn should_draw_host_cursor_by_default() -> bool {
     false
 }

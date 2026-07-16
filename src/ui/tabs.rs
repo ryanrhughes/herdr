@@ -1,17 +1,18 @@
 use ratatui::{
-    layout::Rect,
+    layout::{Alignment, Rect},
     style::{Modifier, Style},
     widgets::Paragraph,
     Frame,
 };
 
-use super::text::display_width_u16;
+use super::text::{display_width_u16, truncate_end};
 use super::widgets::panel_contrast_fg;
 use crate::app::AppState;
 
 const MIN_TAB_WIDTH: u16 = 8;
 const NEW_TAB_WIDTH: u16 = 3;
 const TAB_SCROLL_BUTTON_WIDTH: u16 = 3;
+const MAX_HOSTNAME_LABEL_WIDTH: u16 = 34;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct TabBarView {
@@ -20,6 +21,31 @@ pub(crate) struct TabBarView {
     pub scroll_left_hit_area: Rect,
     pub scroll_right_hit_area: Rect,
     pub new_tab_hit_area: Rect,
+}
+
+fn hostname_label(app: &AppState, area: Rect) -> Option<(Rect, String)> {
+    let hostname = app.show_hostname.then_some(app.hostname.as_deref())??;
+    let max_width = (area.width / 3).min(MAX_HOSTNAME_LABEL_WIDTH);
+    if max_width < 3 {
+        return None;
+    }
+
+    let hostname = truncate_end(hostname, max_width.saturating_sub(2) as usize);
+    let width = display_width_u16(&hostname).saturating_add(2);
+    let rect = Rect::new(area.x + area.width.saturating_sub(width), area.y, width, 1);
+    Some((rect, hostname))
+}
+
+pub(crate) fn tab_bar_tabs_area(app: &AppState, area: Rect) -> Rect {
+    let reserved = hostname_label(app, area)
+        .map(|(rect, _)| rect.width)
+        .unwrap_or(0);
+    Rect::new(
+        area.x,
+        area.y,
+        area.width.saturating_sub(reserved),
+        area.height,
+    )
 }
 
 fn tab_width(ws: &crate::workspace::Workspace, tab_idx: usize) -> u16 {
@@ -367,6 +393,15 @@ pub(super) fn render_tab_bar(app: &AppState, frame: &mut Frame, area: Rect) {
         );
     }
 
+    if let Some((rect, hostname)) = hostname_label(app, area) {
+        frame.render_widget(
+            Paragraph::new(format!(" {hostname} "))
+                .alignment(Alignment::Right)
+                .style(Style::default().fg(p.overlay0).bg(p.panel_bg)),
+            rect,
+        );
+    }
+
     if first_visible_idx.is_some_and(|idx| idx > 0) {
         let x = if app.mouse_capture && app.view.tab_scroll_left_hit_area.width > 0 {
             app.view.tab_scroll_left_hit_area.x + app.view.tab_scroll_left_hit_area.width
@@ -503,5 +538,29 @@ mod tests {
 
         let row = buffer_row_text(terminal.backend().buffer(), app.view.tab_bar_rect, 0);
         assert!(row.contains('馈'), "tab row: {row:?}");
+    }
+
+    #[test]
+    fn tab_bar_reserves_right_aligned_hostname_space() {
+        let mut app = AppState::test_new();
+        app.show_hostname = true;
+        app.hostname = Some("foundry".into());
+        app.active = Some(0);
+        app.workspaces = vec![Workspace::test_new("test")];
+        app.view.tab_bar_rect = Rect::new(0, 0, 30, 1);
+
+        let tabs_area = tab_bar_tabs_area(&app, app.view.tab_bar_rect);
+        let view = compute_tab_bar_view(&app.workspaces[0], tabs_area, 0, true, false);
+        app.view.tab_hit_areas = view.tab_hit_areas;
+
+        let backend = TestBackend::new(30, 1);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal
+            .draw(|frame| render_tab_bar(&app, frame, app.view.tab_bar_rect))
+            .unwrap();
+
+        let row = buffer_row_text(terminal.backend().buffer(), app.view.tab_bar_rect, 0);
+        assert!(row.ends_with(" foundry"), "tab row: {row:?}");
+        assert!(app.view.tab_hit_areas[0].x + app.view.tab_hit_areas[0].width <= tabs_area.width);
     }
 }
